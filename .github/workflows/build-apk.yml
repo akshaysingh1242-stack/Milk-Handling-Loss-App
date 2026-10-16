@@ -1,9 +1,12 @@
+
 name: Build Milk Handling Loss APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -11,6 +14,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,28 +25,31 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
       - name: Find and extract project ZIP
         run: |
           ZIP_FILE=$(find . -maxdepth 1 -type f -iname '*.zip' -print -quit)
           if [ -z "$ZIP_FILE" ]; then
-            echo "Project ZIP not found"
+            echo "ERROR: Project ZIP not found in repository root"
             exit 1
           fi
           mkdir -p source
           unzip -o "$ZIP_FILE" -d source
           PROJECT_DIR=$(dirname "$(find source -name settings.gradle.kts -print -quit)")
           if [ -z "$PROJECT_DIR" ] || [ ! -f "$PROJECT_DIR/app/build.gradle.kts" ]; then
-            echo "Android project structure not found in ZIP"
+            echo "ERROR: Android project structure not found in ZIP"
             find source -maxdepth 4 -type f
             exit 1
           fi
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build APK
         run: gradle --no-daemon -p "$PROJECT_DIR" assembleDebug --stacktrace
@@ -53,3 +60,4 @@ jobs:
           name: Milk-Handling-Loss-debug-apk
           path: source/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+          
