@@ -1,0 +1,1 @@
+<resources><style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"><item name="colorAccent">#176B55</item><item name="android:fontFamily">sans</item><item name="android:statusBarColor">#125642</item><item name="android:navigationBarColor">#125642</item></style></resources>
